@@ -222,15 +222,19 @@ ctf_core.register_chatcommand_alias("bounty", "b", {
 	params = "<player> <score>",
 	func = function(name, params)
 		local bname, amount = string.match(params, "(.*) (.*)")
+		if not (amount and bname) then
+			return false, "Missing argument(s)"
+		end
 		amount = tonumber(amount) * 0.9
-		local bteam = ctf_teams.get(player)
+		local bteam = ctf_teams.get(bname)
 		if bteam == nil then
 			return false, "This player is either not online or not in any team"
 		end
 		if bteam == ctf_teams.get(name) then
 			return false, "You cannot put bounty on your teammate's head!"
 		end
-		if rankings.get(name) <= amount then
+		print(minetest.serialize(ctf_rankings.get(name)))
+		if ctf_rankings.get(name) <= amount then
 			return false, "Sorry you haven't got enough score"
 		end
 		if amount < 15 then
