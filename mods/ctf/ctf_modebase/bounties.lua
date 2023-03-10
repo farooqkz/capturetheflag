@@ -3,6 +3,11 @@ local timer = nil
 local bounties = {}
 
 ctf_modebase.bounties = {}
+-- ^ This is for game's own bounties
+ctf_modebase.contributed_bounties = {}
+-- ^ This is for user contributed bounties
+ctf_modebase.bank = {}
+-- ^ This is to keep track of scores pledged by players for user contributed bounties
 
 local function get_reward_str(rewards)
 	local ret = ""
@@ -43,16 +48,24 @@ end
 function ctf_modebase.bounties.claim(player, killer)
 	local pteam = ctf_teams.get(player)
 
-	if not (pteam and bounties[pteam] and bounties[pteam].name == player) then
+	if not (pteam and bounties[pteam] and bounties[pteam].name == player and contributed_bounties[player] == nil) then
 		return
 	end
+	
+	local rewards = { bounty_kills = 0, score = 0 }
+	if bounties[pteam] and bounties[pteam].rewards then
+		rewards = bounties[pteam].rewards
+		minetest.chat_send_all(minetest.colorize(CHAT_COLOR,
+			string.format("[Bounty] %s killed %s and got %s from the game!", killer, player, get_reward_str(rewards))
+		))
 
-	local rewards = bounties[pteam].rewards
-	minetest.chat_send_all(minetest.colorize(CHAT_COLOR,
-		string.format("[Bounty] %s killed %s and got %s", killer, player, get_reward_str(rewards))
-	))
-
-	bounties[pteam] = nil
+		bounties[pteam] = nil
+	end
+	if contributed_bounties[player] then
+		local score = contributed_bounties[player].amount
+		rewards.score = rewards.score + 
+		minetest.chat_send_all(string.format("[Player bounty] %s killed %s and got %d from %s!", killer, player, score, ""))
+	end	
 	return rewards
 end
 
@@ -167,6 +180,9 @@ ctf_core.register_chatcommand_alias("list_bounties", "lb", {
 			end
 		end
 
+		for pname, bounty in pairs(contributed_bounties) do
+			local player
+
 		if #output <= 0 then
 			return false, "There are no bounties you can claim"
 		end
@@ -195,5 +211,46 @@ ctf_core.register_chatcommand_alias("put_bounty", "pb", {
 			{ bounty_kills=1, score=amount }
 		)
 		return true, "Successfully placed a bounty of " .. amount .. " on " .. minetest.colorize(team_colour, player) .. "!"
+	end,
+})
+
+
+
+ctf_core.register_chatcommand_alias("bounty", "b", {
+	description = "Put bounty on someone's head using your score(10% fee)",
+	params = "<player> <score>",
+	func = function(name, params)
+		local bname, amount = string.match(param, "(.*) (.*)")
+		amount = tonumber(amount) * 0.9
+		local bteam = ctf_teams.get(player)
+		if bteam == nil then
+			return false, "This player is either not online or not in any team"
+		end
+		if bteam == ctf_teams.get(name) then
+			return false, "You cannot put bounty on your teammate's head!"
+		end
+		if rankings.get(name) <= amount then
+			return false, "Sorry you haven't got enough score"
+		end
+		if amount < 15 then
+			return false, "Sorry you must at least donate 15"
+		end
+		if ctf_modebase.contributed_bounties[bname] == nil then
+			contributed_bounties[bname] = { contributors = { name }, amount = amount }
+			rankings.set(rankings.get(name) - amount)
+		else
+			contributed_bounties[bname]["contributors"].add(name)
+			contributed_bounties[bname].amount = contributed_bounties[bname].amount + amount
+		end
+		if bank[name] == nil then
+			bank[name] = amount
+		else
+			bank[name] = bank[name] + amount
+		end
+		local contributors = ""
+		for _, contributor in pairs(contributed_bounties[bname]["contributors"]) do
+			contributors = contributors .. ", " .. contributor
+		end
+		minetest.chat_send_all(string.format("%s donated %d for %'s head!", contributors, amount, bname))
 	end,
 })
