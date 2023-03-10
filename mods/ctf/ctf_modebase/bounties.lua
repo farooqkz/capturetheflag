@@ -48,7 +48,7 @@ end
 function ctf_modebase.bounties.claim(player, killer)
 	local pteam = ctf_teams.get(player)
 
-	if not (pteam and bounties[pteam] and bounties[pteam].name == player and contributed_bounties[player] == nil) then
+	if not (pteam and bounties[pteam] and bounties[pteam].name == player and contributed_bounties[player] ~= nil) then
 		return
 	end
 	
