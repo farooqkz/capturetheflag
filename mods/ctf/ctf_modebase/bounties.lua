@@ -182,6 +182,7 @@ ctf_core.register_chatcommand_alias("list_bounties", "lb", {
 
 		for pname, bounty in pairs(contributed_bounties) do
 			local player
+		end
 
 		if #output <= 0 then
 			return false, "There are no bounties you can claim"
@@ -190,7 +191,7 @@ ctf_core.register_chatcommand_alias("list_bounties", "lb", {
 		local formspec = "size[" .. x .. ",6]\n" .. table.concat(output, "\n")
 		minetest.show_formspec(name, "ctf_modebase:lb", formspec)
 		return true, ""
-	end
+	end,
 })
 
 ctf_core.register_chatcommand_alias("put_bounty", "pb", {
