@@ -221,7 +221,7 @@ ctf_core.register_chatcommand_alias("bounty", "b", {
 	description = "Put bounty on someone's head using your score(10% fee)",
 	params = "<player> <score>",
 	func = function(name, params)
-		local bname, amount = string.match(param, "(.*) (.*)")
+		local bname, amount = string.match(params, "(.*) (.*)")
 		amount = tonumber(amount) * 0.9
 		local bteam = ctf_teams.get(player)
 		if bteam == nil then
