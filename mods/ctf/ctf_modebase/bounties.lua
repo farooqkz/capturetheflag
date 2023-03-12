@@ -233,27 +233,32 @@ ctf_core.register_chatcommand_alias("bounty", "b", {
 		if bteam == ctf_teams.get(name) then
 			return false, "You cannot put bounty on your teammate's head!"
 		end
-		print(minetest.serialize(ctf_rankings.get(name)))
-		if ctf_rankings.get(name) <= amount then
-			return false, "Sorry you haven't got enough score"
-		end
 		if amount < 15 then
 			return false, "Sorry you must at least donate 15"
 		end
-		if ctf_modebase.contributed_bounties[bname] == nil then
-			contributed_bounties[bname] = { contributors = { name }, amount = amount }
-			rankings.set(rankings.get(name) - amount)
-		else
-			contributed_bounties[bname]["contributors"].add(name)
-			contributed_bounties[bname].amount = contributed_bounties[bname].amount + amount
+		local mode_data = ctf_modebase:get_current_mode()
+		if not mode_data or not ctf_modebase.match_started then
+			return false, "Match has not started yet."
 		end
+		local prank = mode_data.rankings:get(name)
+		if not prank or prank["score"] <= amount then
+			return false, "Sorry you haven't got enough score"
+		end
+		if ctf_modebase.contributed_bounties[bname] == nil then
+			ctf_modebase.contributed_bounties[bname] = { contributors = { name }, amount = amount }
+		else
+			ctf_modebase.contributed_bounties[bname]["contributors"].add(name)
+			ctf_modebase.contributed_bounties[bname].amount = ctf_modebase.contributed_bounties[bname].amount + amount
+		end
+		prank["score"] = prank["score"] - amount
+		mode_data.rankings:set(prank)
 		if bank[name] == nil then
 			bank[name] = amount
 		else
 			bank[name] = bank[name] + amount
 		end
 		local contributors = ""
-		for _, contributor in pairs(contributed_bounties[bname]["contributors"]) do
+		for _, contributor in pairs(ctf_modebase.contributed_bounties[bname]["contributors"]) do
 			contributors = contributors .. ", " .. contributor
 		end
 		minetest.chat_send_all(string.format("%s donated %d for %'s head!", contributors, amount, bname))
