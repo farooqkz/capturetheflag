@@ -199,21 +199,25 @@ ctf_core.register_chatcommand_alias("list_bounties", "lb", {
 			end
 		end
 		for pname, bounty in pairs(ctf_modebase.contributed_bounties) do
-			local label = string.format(
-				"label[%d,0.1;%s: %s score]",
-				x,
-				pname,
-				minetest.colorize("cyan", bounty.amount)
-			)
-			table.insert(output, label)
+			local player = minetest.get_player_by_name(pname)
+			if player then
+				local label = string.format(
+					"label[%d,0.1;%s: %s score]",
+					x,
+					pname,
+					minetest.colorize("cyan", bounty.amount)
+				)
+				table.insert(output, label)
 
-			model = string.format(
-				model,
-				x,
-				player:get_properties().textures[1]
-			)
-			table.insert(output, model)
-			x = x + 4.5
+				local model = "model[%d,1;4,6;player;character.b3d;%s;{0,160};;;]"
+				model = string.format(
+					model,
+					x,
+					player:get_properties().textures[1]
+				)
+				table.insert(output, model)
+				x = x + 4.5
+			end
 		end
 
 		if #output <= 0 then
