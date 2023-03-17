@@ -293,15 +293,7 @@ ctf_core.register_chatcommand_alias("bounty", "b", {
 		else
 			ctf_modebase.bank[name] = ctf_modebase.bank[name] + amount
 		end
-		local contributors = ""
 		local count = 0
-		for _, contributor in pairs(ctf_modebase.contributed_bounties[bname]["contributors"]) do
-			contributors = contributors .. ", " .. contributor
-			count = count + 1
-		end
-		if count == 1 then
-			contributors = ctf_modebase.contributed_bounties[bname]["contributors"][1]
-		end
 		amount = ctf_modebase.contributed_bounties[bname]["amount"]
 		minetest.chat_send_all(minetest.colorize(CHAT_COLOR, string.format("%s donated %d for %s's head!", get_contributors(bname), amount, bname)))
 	end,
