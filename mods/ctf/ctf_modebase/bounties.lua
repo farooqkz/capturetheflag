@@ -6,22 +6,21 @@ ctf_modebase.bounties = {}
 -- ^ This is for game's own bounties
 ctf_modebase.contributed_bounties = {}
 -- ^ This is for user contributed bounties
-ctf_modebase.bank = {}
--- ^ This is to keep track of scores pledged by players for user contributed bounties
 
 local function get_contributors(name)
 	local b = ctf_modebase.contributed_bounties[name]
 	if b == nil then
 		return ""
 	else
-		local count = 0
 		local list = ""
-		for _, contributor in pairs(b["contributors"]) do
-			count = count + 1
-			list = list .. contributor .. ","
-		end
-		if count == 1 then
-			list = b["contributors"][1]
+		local first = true
+		for contributor, score in pairs(b["contributors"]) do
+			if first then
+				list = list .. contributor
+				first = false
+			else
+				list = "," .. list .. contributor
+			end
 		end
 		return list
 	end
@@ -81,12 +80,13 @@ function ctf_modebase.bounties.claim(player, killer)
 		bounties[pteam] = nil
 	end
 	if ctf_modebase.contributed_bounties[player] then
-		local score = ctf_modebase.contributed_bounties[player]["amount"]
-		rewards.score = rewards.score + score
+		local score = ctf_modebase.contributed_bounties[player]["total"]
+		rewards["score"] = rewards["score"] + score
 		minetest.chat_send_all(
 			minetest.colorize(
 				CHAT_COLOR,
 				string.format("[Player bounty] %s killed %s and got %d from %s!", killer, player, score, get_contributors(player))))
+		ctf_modebase.contributed_bounties[player] = nil
 	end
 	return rewards
 end
@@ -208,7 +208,7 @@ ctf_core.register_chatcommand_alias("list_bounties", "lb", {
 					"label[%d,0.1;%s: %s score]",
 					x,
 					pname,
-					minetest.colorize("cyan", bounty.amount)
+					minetest.colorize("cyan", bounty.total)
 				)
 				table.insert(output, label)
 
@@ -264,7 +264,7 @@ ctf_core.register_chatcommand_alias("bounty", "b", {
 		if not (amount and bname) then
 			return false, "Missing argument(s)"
 		end
-		amount = tonumber(amount) * 0.9
+		amount = math.floor(amount)
 		local bteam = ctf_teams.get(bname)
 		if bteam == nil then
 			return false, "This player is either not online or not in any team"
@@ -272,31 +272,38 @@ ctf_core.register_chatcommand_alias("bounty", "b", {
 		if bteam == ctf_teams.get(name) then
 			return false, "You cannot put bounty on your teammate's head!"
 		end
-		if amount * 10/9 < 15 then
+		if amount < 15 then
 			return false, "Sorry you must at least donate 15"
 		end
-		local mode_data = ctf_modebase:get_current_mode()
-		if not mode_data or not ctf_modebase.match_started then
+		if amount > 100 then
+			return false, "Sorry but you cannot donate more than 100"
+		end
+		
+		local current_mode = ctf_modebase:get_current_mode()
+		if not current_mode or not ctf_modebase.match_started then
 			return false, "Match has not started yet."
 		end
-		local prank = mode_data.rankings:get(name)
-		if not prank or prank["score"] <= amount then
-			return false, "Sorry you haven't got enough score"
+		local cur_score = math.min(
+			current_mode.recent_rankings.get(name).score or 0,
+			(current_mode.rankings:get(name) or {}).score or 0
+		)
+		if amount > cur_score then
+			return false, "You haven't got enough to donate"
 		end
+		current_mode.recent_rankings.add(name, {score=-amount}, true)
 		if ctf_modebase.contributed_bounties[bname] == nil then
-			ctf_modebase.contributed_bounties[bname] = { contributors = { name }, amount = amount }
+			local contributors = {}
+			contributors[name] = amount
+			ctf_modebase.contributed_bounties[bname] = { total = amount, contributors = contributors }
 		else
-			table.insert(ctf_modebase.contributed_bounties[bname]["contributors"], name)
-			ctf_modebase.contributed_bounties[bname]["amount"] = ctf_modebase.contributed_bounties[bname]["amount"] + amount
+			if ctf_modebase.contributed_bounties[bname]["contributors"][name] == nil then
+				minetest.chat_send_all(name)
+				ctf_modebase.contributed_bounties[bname]["contributors"][name] = amount
+				ctf_modebase.contributed_bounties[bname]["total"] = ctf_modebase.contributed_bounties[bname]["total"] + amount
+			else
+				return false, "You cannot donate for someone's head twice"
+			end
 		end
-		prank["score"] = prank["score"] - amount
-		mode_data.rankings:set(name, prank)
-		if ctf_modebase.bank[name] == nil then
-			ctf_modebase.bank[name] = amount
-		else
-			ctf_modebase.bank[name] = ctf_modebase.bank[name] + amount
-		end
-		amount = ctf_modebase.contributed_bounties[bname]["amount"]
 		minetest.chat_send_all(
 			minetest.colorize(
 			CHAT_COLOR,
