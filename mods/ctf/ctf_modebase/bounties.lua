@@ -278,7 +278,7 @@ ctf_core.register_chatcommand_alias("bounty", "b", {
 		if amount > 100 then
 			return false, "Sorry but you cannot donate more than 100"
 		end
-		
+
 		local current_mode = ctf_modebase:get_current_mode()
 		if not current_mode or not ctf_modebase.match_started then
 			return false, "Match has not started yet."
