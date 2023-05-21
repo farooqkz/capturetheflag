@@ -72,8 +72,8 @@ return {
 		rankings_players = {}
 		rankings_teams = {}
 		local current_mode = ctf_modebase:get_current_mode()
-		for player in pairs(ctf_modebase.contributed_bounties) do
-			for bounty_donator, bounty_amount in pairs(ctf_modebase.contributed_bounties) do
+		for _, bounties in pairs(ctf_modebase.contributed_bounties) do
+			for bounty_donator, bounty_amount in pairs(bounties["contributors"]) do
 				current_mode.recent_rankings.add(bounty_donator, {score=bounty_amount}, true)
 			end
 		end
