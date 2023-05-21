@@ -272,7 +272,7 @@ ctf_core.register_chatcommand_alias("bounty", "b", {
 		if bteam == ctf_teams.get(name) then
 			return false, "You cannot put bounty on your teammate's head!"
 		end
-		if amount < 15 then
+		if amount < 5 then
 			return false, "Sorry you must at least donate 15"
 		end
 		if amount > 100 then
