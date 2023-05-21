@@ -6,6 +6,10 @@ ctf_modebase.bounties = {}
 -- ^ This is for game's own bounties
 ctf_modebase.contributed_bounties = {}
 -- ^ This is for user contributed bounties
+-- Saving format: player_name(str) equals to a table
+-- The table has "total" which is the total contributed bounty
+-- on player_name's head and "contributors" is a mapping of donater_name(str)
+-- to donate_amount(number).
 
 local function get_contributors(name)
 	local b = ctf_modebase.contributed_bounties[name]
