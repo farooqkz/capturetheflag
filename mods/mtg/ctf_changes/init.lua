@@ -177,3 +177,49 @@ minetest.override_item("default:furnace_active", {
 	can_dig = function() return true end,
 	on_destruct = furnace_on_destruct,
 })
+
+
+minetest.override_item("tnt:tnt", {
+	after_place_node = function(pos, placer, itemstack, pointed_thing)
+		if not placer or placer:get_player_name() == "" then
+			return
+		end
+		local pteam = ctf_teams.get(placer:get_player_name())
+		if not pteam then
+			minetest.set_node(pos, {name="air"})
+			return true
+		end
+		for flagteam, team in pairs(ctf_map.current_map.teams) do
+			if flagteam == pteam then
+				local distance_from_flag = vector.distance(pos, team.flag_pos)
+				if distance_from_flag <= 30 then
+					minetest.set_node(pos, {name="air"})
+					return true
+				end
+			end
+		end
+		
+		local meta = minetest.get_meta(pos)
+		meta:set_string("team", pteam)
+		meta:set_string("player", placer:get_player_name())
+	end,
+	on_dig = function(pos, node, digger)
+		if digger:get_player_name() == "" then
+			return true
+		end
+		local meta = minetest.get_meta(pos)
+		local placer = meta:get_string("player")
+		local placer_team = meta:get_string("team")
+		local digger_team = ctf_teams.get(digger:get_player_name())
+		if not placer_team then
+			return true
+		end
+		if not digger_team then
+			return false
+		end
+		if digger_team == placer_team then
+			return true
+		end
+		tnt.boom(pos, mientest.registered_nodes["tnt:tnt"])
+	end,
+})

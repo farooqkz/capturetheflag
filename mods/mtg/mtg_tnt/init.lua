@@ -97,6 +97,11 @@ local function destroy(drops, npos, cid, c_air, c_fire,
 		return cid
 	end
 
+	local node_name = minetest.get_node(npos).name
+	if minetest.registered_nodes[node_name].groups.immortal then
+		return cid
+	end
+
 	local def = cid_data[cid]
 
 	if not def then
@@ -157,6 +162,9 @@ end
 
 local function entity_physics(pos, radius, drops)
 	local objs = minetest.get_objects_inside_radius(pos, radius)
+	local tnt_meta = minetest.get_meta(pos)
+	local placer = tnt_meta:get_string("player")
+	local placer_team = tnt_meta:get_string("team")
 	for _, obj in pairs(objs) do
 		local obj_pos = obj:get_pos()
 		local dist = math.max(1, vector.distance(pos, obj_pos))
@@ -166,8 +174,17 @@ local function entity_physics(pos, radius, drops)
 			local dir = vector.normalize(vector.subtract(obj_pos, pos))
 			local moveoff = vector.multiply(dir, 2 / dist * radius)
 			obj:add_velocity(moveoff)
-
-			obj:set_hp(obj:get_hp() - damage)
+			local name = obj:get_player_name()
+			if name ~= placer or ctf_teams.get(name) ~= placer_team then
+				minetest.chat_send_all(placer_team)
+				minetest.chat_send_all(ctf_teams.get(name))
+				local puncher = minetest.get_player_by_name(placer)
+				if puncher then
+					obj:punch(puncher, 10, { tnt = 1 }, nil)
+				else
+					obj:set_hp(obj:get_hp() - damage)
+				end
+			end
 		else
 			local luaobj = obj:get_luaentity()
 
