@@ -179,7 +179,7 @@ minetest.override_item("default:furnace_active", {
 })
 
 
-minetest.override_item("tnt:tnt", {
+minetest.override_item("mtg_tnt:tnt", {
 	after_place_node = function(pos, placer, itemstack, pointed_thing)
 		if not placer or placer:get_player_name() == "" then
 			return

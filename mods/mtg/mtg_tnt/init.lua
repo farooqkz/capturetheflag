@@ -708,7 +708,7 @@ function tnt.register_tnt(def)
 end
 
 tnt.register_tnt({
-	name = "tnt:tnt",
+	name = "mtg_tnt:tnt",
 	description = S("TNT"),
 	radius = tnt_radius,
 })
