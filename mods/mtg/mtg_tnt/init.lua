@@ -176,8 +176,6 @@ local function entity_physics(pos, radius, drops)
 			obj:add_velocity(moveoff)
 			local name = obj:get_player_name()
 			if name ~= placer or ctf_teams.get(name) ~= placer_team then
-				minetest.chat_send_all(placer_team)
-				minetest.chat_send_all(ctf_teams.get(name))
 				local puncher = minetest.get_player_by_name(placer)
 				if puncher then
 					obj:punch(puncher, 10, { tnt = 1 }, nil)
@@ -708,7 +706,7 @@ function tnt.register_tnt(def)
 end
 
 tnt.register_tnt({
-	name = "mtg_tnt:tnt",
+	name = "tnt:tnt",
 	description = S("TNT"),
 	radius = tnt_radius,
 })
