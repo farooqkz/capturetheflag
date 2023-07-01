@@ -4,12 +4,16 @@ local bounties = {}
 
 ctf_modebase.bounties = {}
 -- ^ This is for game's own bounties
-ctf_modebase.contributed_bounties = {}
+ctf_modebase.contributed_bounties = {
+--[[
+	["player_name"] = {
+		total = score,
+		contributors = {"player1", "player2", ...}
+	},
+	...
+--]]
+}
 -- ^ This is for user contributed bounties
--- Saving format: player_name(str) equals to a table
--- The table has "total" which is the total contributed bounty
--- on player_name's head and "contributors" is a mapping of donater_name(str)
--- to donate_amount(number).
 
 local function get_contributors(name)
 	local b = ctf_modebase.contributed_bounties[name]
@@ -271,10 +275,10 @@ ctf_core.register_chatcommand_alias("bounty", "b", {
 		amount = math.floor(amount)
 		local bteam = ctf_teams.get(bname)
 		if bteam == nil then
-			return false, "This player is either not online or not in any team"
+			return false, "This player is either not online or isn't in a team"
 		end
 		if bteam == ctf_teams.get(name) then
-			return false, "You cannot put bounty on your teammate's head!"
+			return false, "You cannot put bounty on your teammate!"
 		end
 		if amount < 5 then
 			return false, "Sorry you must at least donate 15"
@@ -300,17 +304,16 @@ ctf_core.register_chatcommand_alias("bounty", "b", {
 			contributors[name] = amount
 			ctf_modebase.contributed_bounties[bname] = { total = amount, contributors = contributors }
 		else
-			if ctf_modebase.contributed_bounties[bname]["contributors"][name] == nil then
-				minetest.chat_send_all(name)
-				ctf_modebase.contributed_bounties[bname]["contributors"][name] = amount
-				ctf_modebase.contributed_bounties[bname]["total"] = ctf_modebase.contributed_bounties[bname]["total"] + amount
+			if ctf_modebase.contributed_bounties[bname].contributors[name] == nil then
+				ctf_modebase.contributed_bounties[bname].contributors[name] = amount
 			else
-				return false, "You cannot donate for someone's head twice"
+				ctf_modebase.contributed_bounties[bname].contributors[name] = ctf_modebase.contributed_bounties[bname].contributors[name] + amount
 			end
+			ctf_modebase.contributed_bounties[bname].total = ctf_modebase.contributed_bounties[bname].total + amount
 		end
 		minetest.chat_send_all(
 			minetest.colorize(
 			CHAT_COLOR,
-			string.format("%s donated %d for %s's head!", get_contributors(bname), amount, bname)))
+			string.format("%s put %d bounty on %s!", get_contributors(bname), amount, bname)))
 	end,
 })
