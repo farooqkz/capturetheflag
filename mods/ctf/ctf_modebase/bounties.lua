@@ -307,7 +307,8 @@ ctf_core.register_chatcommand_alias("bounty", "b", {
 			if ctf_modebase.contributed_bounties[bname].contributors[name] == nil then
 				ctf_modebase.contributed_bounties[bname].contributors[name] = amount
 			else
-				ctf_modebase.contributed_bounties[bname].contributors[name] = ctf_modebase.contributed_bounties[bname].contributors[name] + amount
+				ctf_modebase.contributed_bounties[bname].contributors[name] =
+					ctf_modebase.contributed_bounties[bname].contributors[name] + amount
 			end
 			ctf_modebase.contributed_bounties[bname].total = ctf_modebase.contributed_bounties[bname].total + amount
 		end
