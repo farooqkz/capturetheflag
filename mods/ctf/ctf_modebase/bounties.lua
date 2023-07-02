@@ -17,7 +17,7 @@ ctf_modebase.contributed_bounties = {
 
 local function get_contributors(name)
 	local b = ctf_modebase.contributed_bounties[name]
-	if b == nil then
+	if not b then
 		return ""
 	else
 		local list = ""
@@ -73,7 +73,7 @@ end
 function ctf_modebase.bounties.claim(player, killer)
 	local pteam = ctf_teams.get(player)
 	local is_bounty = not (pteam and bounties[pteam] and bounties[pteam].name == player)
-	if is_bounty and ctf_modebase.contributed_bounties[player] == nil then
+	if is_bounty and not ctf_modebase.contributed_bounties[player] then
 		-- checking if there is bounty on this player
 		return
 	end
@@ -274,7 +274,7 @@ ctf_core.register_chatcommand_alias("bounty", "b", {
 		end
 		amount = math.floor(amount)
 		local bteam = ctf_teams.get(bname)
-		if bteam == nil then
+		if not bteam then
 			return false, "This player is either not online or isn't in a team"
 		end
 		if bteam == ctf_teams.get(name) then
@@ -282,9 +282,6 @@ ctf_core.register_chatcommand_alias("bounty", "b", {
 		end
 		if amount < 5 then
 			return false, "Sorry you must at least donate 15"
-		end
-		if amount > 100 then
-			return false, "Sorry but you cannot donate more than 100"
 		end
 
 		local current_mode = ctf_modebase:get_current_mode()
@@ -299,12 +296,12 @@ ctf_core.register_chatcommand_alias("bounty", "b", {
 			return false, "You haven't got enough to donate"
 		end
 		current_mode.recent_rankings.add(name, {score=-amount}, true)
-		if ctf_modebase.contributed_bounties[bname] == nil then
+		if not ctf_modebase.contributed_bounties[bname] then
 			local contributors = {}
 			contributors[name] = amount
 			ctf_modebase.contributed_bounties[bname] = { total = amount, contributors = contributors }
 		else
-			if ctf_modebase.contributed_bounties[bname].contributors[name] == nil then
+			if not ctf_modebase.contributed_bounties[bname].contributors[name] then
 				ctf_modebase.contributed_bounties[bname].contributors[name] = amount
 			else
 				ctf_modebase.contributed_bounties[bname].contributors[name] =
