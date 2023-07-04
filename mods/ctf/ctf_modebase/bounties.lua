@@ -8,12 +8,12 @@ ctf_modebase.contributed_bounties = {
 --[[
 	["player_name"] = {
 		total = score,
-		contributors = {"player1", "player2", ...}
+		contributors = {["player1"] = amount, ["player2"] = amount, ...}
 	},
 	...
 --]]
 }
--- ^ This is for user contributed bounties
+-- ^ This is for player contributed bounties
 
 local function get_contributors(name)
 	local b = ctf_modebase.contributed_bounties[name]
@@ -22,7 +22,7 @@ local function get_contributors(name)
 	else
 		local list = ""
 		local first = true
-		for contributor, score in pairs(b["contributors"]) do
+		for contributor, score in pairs(b.contributors) do
 			if first then
 				list = list .. contributor
 				first = false
@@ -88,8 +88,8 @@ function ctf_modebase.bounties.claim(player, killer)
 		bounties[pteam] = nil
 	end
 	if ctf_modebase.contributed_bounties[player] then
-		local score = ctf_modebase.contributed_bounties[player]["total"]
-		rewards["score"] = rewards["score"] + score
+		local score = ctf_modebase.contributed_bounties[player].total
+		rewards.score = rewards.score + score
 		minetest.chat_send_all(
 			minetest.colorize(
 				CHAT_COLOR,
@@ -241,8 +241,8 @@ ctf_core.register_chatcommand_alias("list_bounties", "lb", {
 	end,
 })
 
-ctf_core.register_chatcommand_alias("put_bounty", "pb", {
-	description = "Put bounty on some player",
+ctf_core.register_chatcommand_alias("place_bounty", "pb", {
+	description = "Place bounty on some player",
 	params = "<player> <amount>",
 	privs = { ctf_admin = true },
 	func = function(name, param)
@@ -265,7 +265,7 @@ ctf_core.register_chatcommand_alias("put_bounty", "pb", {
 
 
 ctf_core.register_chatcommand_alias("bounty", "b", {
-	description = "Put bounty on someone's head using your score(10% fee)",
+	description = "Place bounty on someone using your match score",
 	params = "<player> <score>",
 	func = function(name, params)
 		local bname, amount = string.match(params, "(.*) (.*)")
@@ -278,22 +278,19 @@ ctf_core.register_chatcommand_alias("bounty", "b", {
 			return false, "This player is either not online or isn't in a team"
 		end
 		if bteam == ctf_teams.get(name) then
-			return false, "You cannot put bounty on your teammate!"
+			return false, "You cannot place a bounty on your teammate!"
 		end
 		if amount < 5 then
-			return false, "Sorry you must at least donate 15"
+			return false, "Your bounty needs to be of at least 5 points"
 		end
 
 		local current_mode = ctf_modebase:get_current_mode()
 		if not current_mode or not ctf_modebase.match_started then
 			return false, "Match has not started yet."
 		end
-		local cur_score = math.min(
-			current_mode.recent_rankings.get(name).score or 0,
-			(current_mode.rankings:get(name) or {}).score or 0
-		)
+		local cur_score = current_mode.recent_rankings.get(name).score or 0
 		if amount > cur_score then
-			return false, "You haven't got enough to donate"
+			return false, "You haven't got enough points"
 		end
 		current_mode.recent_rankings.add(name, {score=-amount}, true)
 		if not ctf_modebase.contributed_bounties[bname] then
@@ -312,6 +309,6 @@ ctf_core.register_chatcommand_alias("bounty", "b", {
 		minetest.chat_send_all(
 			minetest.colorize(
 			CHAT_COLOR,
-			string.format("%s put %d bounty on %s!", get_contributors(bname), amount, bname)))
+			string.format("%s placed %d bounty on %s!", get_contributors(bname), amount, bname)))
 	end,
 })
