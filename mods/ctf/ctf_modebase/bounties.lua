@@ -268,7 +268,7 @@ ctf_core.register_chatcommand_alias("bounty", "b", {
 	description = "Place bounty on someone using your match score",
 	params = "<player> <score>",
 	func = function(name, params)
-		local bname, amount = string.match(params, "(.*) (.*)")
+		local bname, amount = string.match(params, "([^%s]*) ([^%s]*)")
 		if not (amount and bname) then
 			return false, "Missing argument(s)"
 		end
