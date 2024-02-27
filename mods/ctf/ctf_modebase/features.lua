@@ -29,6 +29,13 @@ local LOADING_SCREEN_TARGET_TIME = 7
 local loading_screen_time
 
 local function update_playertag(player, t, nametag, team_nametag, symbol_nametag)
+	if not      nametag.object.set_observers or
+	   not team_nametag.object.set_observers or
+	   not symbol_nametag.object.set_observers
+	then
+		return
+	end
+
 	local entity_players = {}
 	local nametag_players = table.copy(ctf_teams.online_players[t].players)
 	local symbol_players = {}
@@ -53,9 +60,9 @@ local function update_playertag(player, t, nametag, team_nametag, symbol_nametag
 	end
 
 	-- Occasionally crashes in singleplayer, so call it safely
-	pcall(  team_nametag.object.set_observers,   team_nametag.object, nametag_players)
-	pcall(symbol_nametag.object.set_observers, symbol_nametag.object, symbol_players )
-	pcall(       nametag.object.set_observers,        nametag.object, entity_players )
+	       nametag.object:set_observers(entity_players )
+	  team_nametag.object:set_observers(nametag_players)
+	symbol_nametag.object:set_observers(symbol_players )
 end
 
 local tags_hidden = false
@@ -101,11 +108,11 @@ local function set_playertags_state(state)
 				local nametag = playertag.entity
 				local symbol_entity = playertag.symbol_entity
 
-				if nametag and team_nametag and symbol_entity then
-					-- Occasionally crashes in singleplayer, so call it safely
-					pcall( team_nametag.object.set_observers,  team_nametag.object, {})
-					pcall(symbol_entity.object.set_observers, symbol_entity.object, {})
-					pcall(      nametag.object.set_observers,       nametag.object, {})
+				if nametag and team_nametag and symbol_entity and
+				nametag.object.set_observers and team_nametag.object.set_observers and symbol_entity.object.set_observers then
+					 team_nametag.object:set_observers({})
+					symbol_entity.object:set_observers({})
+					      nametag.object:set_observers({})
 				end
 			end
 		end
@@ -418,9 +425,12 @@ local item_levels = {
 
 local delete_queue = {}
 local team_switch_after_capture = false
+local flag_capture_counter = {}
 
 return {
 	on_new_match = function()
+		flag_capture_counter = {}
+
 		team_list = {}
 		for tname in pairs(ctf_map.current_map.teams) do
 			table.insert(team_list, tname)
@@ -597,6 +607,17 @@ return {
 			return worst_players.t
 		end
 	end,
+	base_flag_name = function(flagteam)
+		local eliminate_counter = ""
+		local max = ctf_core.settings.eliminate_team_flag_captures
+
+		if max > 1 then
+			eliminate_counter = "[" .. max - (flag_capture_counter[flagteam] or 0) .. "/" .. max .. "] "
+		end
+
+		return eliminate_counter ..
+				HumanReadable(flagteam) .. "'s flag"
+	end,
 	can_take_flag = function(player, teamname)
 		if not ctf_modebase.match_started then
 			tp_player_near_flag(player)
@@ -698,7 +719,27 @@ return {
 
 		recent_rankings.add(pname, {score = capture_reward, flag_captures = #teamnames})
 
-		teams_left = teams_left - #teamnames
+		local not_finished = {}
+		for _, lost_team in ipairs(teamnames) do
+			local newcapcount = (flag_capture_counter[lost_team] or 0) + 1
+
+			flag_capture_counter[lost_team] = newcapcount
+
+			if newcapcount < ctf_core.settings.eliminate_team_flag_captures then
+				ctf_modebase.restore_flag(lost_team, pname)
+				not_finished[lost_team] = true
+			else
+				teams_left = teams_left - 1
+
+				table.remove(team_list, table.indexof(team_list, lost_team))
+
+				for lost_player in pairs(ctf_teams.online_players[lost_team].players) do
+					team_switch_after_capture = true
+						ctf_teams.allocate_player(lost_player)
+					team_switch_after_capture = false
+				end
+			end
+		end
 
 		if teams_left <= 1 then
 			local capture_text = "Player %s captured"
@@ -720,17 +761,9 @@ return {
 			ctf_modebase.announce(win_text)
 
 			ctf_modebase.start_new_match(5)
-		else
-			for _, lost_team in ipairs(teamnames) do
-				table.remove(team_list, table.indexof(team_list, lost_team))
-
-				for lost_player in pairs(ctf_teams.online_players[lost_team].players) do
-					team_switch_after_capture = true
-						ctf_teams.allocate_player(lost_player)
-					team_switch_after_capture = false
-				end
-			end
 		end
+
+		return not_finished
 	end,
 	on_allocplayer = function(player, new_team)
 		player:set_hp(player:get_properties().hp_max)
