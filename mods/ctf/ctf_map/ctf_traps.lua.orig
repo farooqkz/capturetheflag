@@ -36,7 +36,7 @@ minetest.register_node("ctf_map:spike", {
 	paramtype2 = "meshoptions",
 	sunlight_propagates = true,
 	walkable = false,
-	damage_per_second = 1,
+	damage_per_second = 5,
 	groups = {cracky=1, level=2},
 	selection_box = {
 		type = "fixed",

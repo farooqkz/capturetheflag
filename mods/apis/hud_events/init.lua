@@ -60,7 +60,7 @@ local function show_quick_hud_event(player, huddef)
 	end)
 end
 
-local function handle_hud_events(player)
+local function handle_hud_events(player, offset)
 	local pname = player:get_player_name()
 
 	local huddef = table.remove(hud_queues[pname].e, 1)
@@ -69,7 +69,7 @@ local function handle_hud_events(player)
 		hud:add(player, "hud_event", {
 			hud_elem_type = "text",
 			position = {x = 0.5, y = 0.5},
-			offset = {x = 0, y = 20},
+			offset = {x = 0, y = 20 + },
 			alignment = {x = "center", y = "down"},
 			text = huddef.text,
 			color = huddef.color,
@@ -108,6 +108,7 @@ end
 		text = "This is a hud event",
 		color = "info",
 		quick = true,
+		channel = 0-3 | nil
 	})
 ]]
 function hud_events.new(player, def)
