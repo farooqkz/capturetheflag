@@ -269,7 +269,6 @@ for _, team in ipairs(ctf_teams.teamlist) do
 				return 0
 			end
 		end
-
 		function def.allow_metadata_inventory_take(pos, listname, index, stack, player)
 			if listname == "helper" then
 				return 0
@@ -305,6 +304,19 @@ for _, team in ipairs(ctf_teams.teamlist) do
 				stack:to_string(),
 				minetest.pos_to_string(pos)
 			))
+			local meta = stack:get_meta()
+			local dropped_by = meta:get_string("dropped_by")
+			local pname = player:get_player_name()
+			if dropped_by ~= pname and dropped_by ~= "" then
+				local cur_mode = ctf_modebase:get_current_mode()
+				if pname and cur_mode then
+					--local score = (item_value[stack:get_name()] or 0) * stack:get_count()
+					cur_mode.recent_rankings.add(pname, { score = 1 }, false)
+				end
+			end
+			meta:set_string("dropped_by", "")
+			local inv = minetest.get_inventory({ type="node", pos=pos })
+			inv:set_stack(listname, index, stack)
 		end
 
 		function def.on_metadata_inventory_take(pos, listname, index, stack, player)
@@ -315,65 +327,7 @@ for _, team in ipairs(ctf_teams.teamlist) do
 			))
 		end
 
+
 		minetest.register_node("ctf_teams:chest_" .. team, def)
 	end
-	function def.allow_metadata_inventory_take(pos, listname, index, stack, player)
-		if listname == "helper" then
-			return 0
-		end
-
-		if ctf_modebase.flag_captured[team] then
-			return stack:get_count()
-		end
-
-		local name = player:get_player_name()
-
-		if team ~= ctf_teams.get(name) then
-			hud_events.new(player, {
-				quick = true,
-				text = "You're not on team " .. team,
-				color = "warning",
-			})
-			return 0
-		end
-
-		local reg_access, pro_access = get_chest_access(name)
-
-		if reg_access == true and (pro_access == true or listname ~= "pro") then
-			return stack:get_count()
-		else
-			return 0
-		end
-	end
-
-	function def.on_metadata_inventory_put(pos, listname, index, stack, player)
-		minetest.log("action", string.format("%s puts %s to team chest at %s",
-			player:get_player_name(),
-			stack:to_string(),
-			minetest.pos_to_string(pos)
-		))
-		local meta = stack:get_meta()
-		local dropped_by = meta:get_string("dropped_by")
-		local pname = player:get_player_name()
-		if dropped_by ~= pname and dropped_by ~= "" then
-			local cur_mode = ctf_modebase:get_current_mode()
-			if pname and cur_mode then
-				--local score = (item_value[stack:get_name()] or 0) * stack:get_count()
-				cur_mode.recent_rankings.add(pname, { score = 1 }, false)
-			end
-		end
-		meta:set_string("dropped_by", "")
-		local inv = minetest.get_inventory({ type="node", pos=pos })
-		inv:set_stack(listname, index, stack)
-	end
-
-	function def.on_metadata_inventory_take(pos, listname, index, stack, player)
-		minetest.log("action", string.format("%s takes %s from team chest at %s",
-			player:get_player_name(),
-			stack:to_string(),
-			minetest.pos_to_string(pos)
-		))
-	end
-
-	minetest.register_node("ctf_teams:chest_" .. team, def)
 end

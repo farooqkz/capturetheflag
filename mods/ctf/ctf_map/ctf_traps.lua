@@ -75,35 +75,6 @@ for _, team in ipairs(ctf_teams.teamlist) do
 	if not ctf_teams.team[team].not_playing then
 		local spikecolor = ctf_teams.team[team].color
 
-<<<<<<< HEAD
-	minetest.register_node("ctf_map:spike_"..team, {
-		description = HumanReadable(team).." Team Spike",
-		drawtype = "plantlike",
-		tiles = {"ctf_map_spike.png^[colorize:"..spikecolor..":150"},
-		inventory_image = "ctf_map_spike.png^[colorize:"..spikecolor..":150",
-		use_texture_alpha = "clip",
-		paramtype = "light",
-		paramtype2 = "meshoptions",
-		sunlight_propagates = true,
-		walkable = false,
-		damage_per_second = 5,
-		groups = {cracky=1, level=2},
-		drop = "ctf_map:spike",
-		selection_box = {
-			type = "fixed",
-			fixed = {-0.5, -0.5, -0.5, 0.5, 0, 0.5},
-		},
-		on_place = function(itemstack, placer, pointed_thing)
-			local item, pos = minetest.item_place(itemstack, placer, pointed_thing, 34)
-			if item then
-				local pname = placer:get_player_name()
-				minetest.get_meta(pointed_thing.above):set_string("placer_team", ctf_teams.get(pname))
-				minetest.get_meta(pointed_thing.above):set_string("placer", pname)
-			end
-			return item, pos
-		end
-	})
-=======
 		minetest.register_node("ctf_map:spike_"..team, {
 			description = HumanReadable(team).." Team Spike",
 			drawtype = "plantlike",
@@ -114,7 +85,7 @@ for _, team in ipairs(ctf_teams.teamlist) do
 			paramtype2 = "meshoptions",
 			sunlight_propagates = true,
 			walkable = false,
-			damage_per_second = 7,
+			damage_per_second = 5,
 			groups = {cracky=1, level=2},
 			drop = "ctf_map:spike",
 			selection_box = {
@@ -122,11 +93,16 @@ for _, team in ipairs(ctf_teams.teamlist) do
 				fixed = {-0.5, -0.5, -0.5, 0.5, 0, 0.5},
 			},
 			on_place = function(itemstack, placer, pointed_thing)
-				return minetest.item_place(itemstack, placer, pointed_thing, 34)
+				local item, pos = minetest.item_place(itemstack, placer, pointed_thing, 34)
+				if item then
+					local pname = placer:get_player_name()
+					minetest.get_meta(pointed_thing.above):set_string("placer_team", ctf_teams.get(pname))
+					minetest.get_meta(pointed_thing.above):set_string("placer", pname)
+				end
+				return item, pos
 			end
 		})
 	end
->>>>>>> 18d0b00fc1620a4da2d2d7927323873c9284f6bb
 end
 
 minetest.register_on_player_hpchange(function(player, hp_change, reason)

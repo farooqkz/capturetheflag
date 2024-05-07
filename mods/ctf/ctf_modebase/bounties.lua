@@ -71,19 +71,12 @@ function ctf_modebase.bounties.claim(player, killer)
 		return
 	end
 
-<<<<<<< HEAD
 	local rewards = { bounty_kills = 0, score = 0 }
 	if bounties[pteam] and bounties[pteam].rewards then
 		rewards = bounties[pteam].rewards
 		minetest.chat_send_all(minetest.colorize(CHAT_COLOR,
 			string.format("[Bounty] %s killed %s and got %s from the game!", killer, player, get_reward_str(rewards))
 		))
-=======
-	local rewards = bounties[pteam].rewards
-	local bounty_kill_text = string.format("[Bounty] %s killed %s and got %s", killer, player, get_reward_str(rewards))
-	minetest.chat_send_all(minetest.colorize(CHAT_COLOR, bounty_kill_text))
-	ctf_modebase.announce(bounty_kill_text)
->>>>>>> c4a9605ec779b3c37e7bd2e6c95a894fd39b7991
 
 		bounties[pteam] = nil
 	end

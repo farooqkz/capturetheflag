@@ -71,58 +71,7 @@ ctf_core.register_chatcommand_alias("rank", "r", {
 	params = "[ mode:all | mode:technical modename] <playername>",
 	func = function(name, param)
 		local mode_name, mode_data, pname = get_gamemode(param)
-<<<<<<< HEAD
-		if not mode_name then
-			return false, mode_data
-		end
 
-		if not pname then
-			pname = name
-		end
-		local prank = mode_data.rankings:get(pname) -- [p]layer [rank]
-
-		if not prank then
-			return false, string.format("Player %s has no rankings in mode %s!", pname, mode_name)
-		end
-
-		local return_str = string.format(
-			"Rankings for player %s in mode %s:\n\t", minetest.colorize("#ffea00", pname), mode_name
-		)
-
-		local kills = 0
-		local deaths = 1
-		for _, rank in ipairs(mode_data.summary_ranks) do
-			return_str = string.format("%s%s: %s,\n\t",
-				return_str,
-				minetest.colorize("#63d437", HumanReadable(rank)),
-				minetest.colorize("#ffea00", math.round(prank[rank] or 0))
-			)
-			if rank == "kills" then
-				kills = prank[rank] or 0
-			end
-			if rank == "deaths" then
-				deaths = prank[rank] or 1
-			end
-		end
-
-		if deaths == 0 then
-			deaths = 1
-		end
-
-		return_str = string.format("%s%s: %s,\n\t",
-			return_str,
-			minetest.colorize("#63d437", "K/D"),
-			minetest.colorize("#ffea00", tostring(kills/deaths))
-		)
-
-		return_str = string.format("%s%s: %s",
-			return_str,
-			minetest.colorize("#63d437", "Place"),
-			minetest.colorize("#ffea00", mode_data.rankings.top:get_place(pname))
-		)
-
-		return true, return_str
-=======
 		if mode_name == "all" then
 			local return_str = string.format(
 				"Rankings for player %s in all modes:\n",
@@ -138,7 +87,6 @@ ctf_core.register_chatcommand_alias("rank", "r", {
 		else
 			return rank(name, mode_name, mode_data, pname)
 		end
->>>>>>> c4a9605ec779b3c37e7bd2e6c95a894fd39b7991
 	end
 })
 
