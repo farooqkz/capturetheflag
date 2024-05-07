@@ -69,7 +69,7 @@ local function handle_hud_events(player, offset)
 		hud:add(player, "hud_event", {
 			hud_elem_type = "text",
 			position = {x = 0.5, y = 0.5},
-			offset = {x = 0, y = 20 + },
+			offset = {x = 0, y = 20 },
 			alignment = {x = "center", y = "down"},
 			text = huddef.text,
 			color = huddef.color,
