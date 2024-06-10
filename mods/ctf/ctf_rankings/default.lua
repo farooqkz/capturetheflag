@@ -1,5 +1,4 @@
 return function(prefix, top)
-
 local modstorage = assert(minetest.get_mod_storage(), "Can only init rankings at runtime!")
 
 local function op_all(operation)
@@ -74,5 +73,4 @@ return {
 		self.modstorage:set_string(pname)
 	end,
 }
-
 end
