@@ -27,6 +27,7 @@ local LOADING_SCREEN_TARGET_TIME = 7
 local loading_screen_time
 
 local function update_playertag(player, t, nametag, team_nametag, symbol_nametag)
+	--[[
 	if not      nametag.object.set_observers or
 	   not team_nametag.object.set_observers or
 	   not symbol_nametag.object.set_observers
@@ -61,6 +62,7 @@ local function update_playertag(player, t, nametag, team_nametag, symbol_nametag
 	       nametag.object:set_observers(entity_players )
 	  team_nametag.object:set_observers(nametag_players)
 	symbol_nametag.object:set_observers(symbol_players )
+	--]]
 end
 
 local tags_hidden = false
